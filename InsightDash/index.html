@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <!-- Simple Statistics for data analysis -->
+    <script src="https://unpkg.com/simple-statistics@7.8.3/dist/simple-statistics.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Data Visualization Dashboard</h1>
+            <div class="header-actions">
+                <button id="start-tour" class="help-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>Help</span>
+                </button>
+                <div class="theme-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="theme-switch">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">Dark Mode</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="file-upload-section">
+            <div class="upload-container">
+                <h2>Upload Your Data</h2>
+                <p>Upload your CSV file to generate visualizations</p>
+                <div class="upload-area" id="upload-area">
+                    <input type="file" id="csv-file" accept=".csv" hidden>
+                    <div class="upload-prompt">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Drag & drop your CSV file here or <span class="browse-btn">browse files</span></p>
+                    </div>
+                </div>
+                <div class="file-info" id="file-info">
+                    <p>No file selected</p>
+                </div>
+
+                <!-- Tips for Data Preparation -->
+                <div class="hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <div class="hint-content">
+                        <strong>Data Preparation Tip:</strong> For best results, ensure your CSV file has clean headers and consistent data formatting. Include both categorical columns (like names, dates) and numerical columns (like sales, counts).
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="visualizations-section" id="visualizations-section">
+            <div class="controls">
+                <h2>Data Visualizations</h2>
+                <div class="control-buttons">
+                    <button id="generate-insights" class="btn btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        Generate Insights
+                    </button>
+                    <button id="download-all" class="btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download All
+                    </button>
+                    <button id="toggle-grid" class="btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Toggle Layout
+                    </button>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <!-- Insights Panel -->
+                <div class="insights-panel" id="insights-panel">
+                    <div class="insights-header">
+                        <h3>Data Insights</h3>
+                        <button id="refresh-insights" class="insights-refresh" title="Refresh insights">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 4v6h-6"></path>
+                                <path d="M1 20v-6h6"></path>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                                <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="insights-description">
+                        Automated analysis of your data that highlights key trends, patterns, and outliers.
+                    </div>
+                    
+                    <div class="insights-legend">
+                        <div class="legend-item">
+                            <span class="legend-color positive"></span>
+                            <span class="legend-label">Positive</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color negative"></span>
+                            <span class="legend-label">Negative</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color warning"></span>
+                            <span class="legend-label">Warning</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color info"></span>
+                            <span class="legend-label">Info</span>
+                        </div>
+                    </div>
+                    
+                    <div id="insights-container">
+                        <div class="no-insights">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <p>Upload a CSV file to generate automatic insights about your data</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Container -->
+                <div class="charts-container">
+                    <div class="dashboard-grid" id="dashboard-grid">
+                        <!-- Charts will be inserted here dynamically -->
+                        <div class="chart-container" id="bar-chart-container">
+                            <div class="chart-header">
+                                <h3>Bar Chart</h3>
+                                <div class="chart-actions">
+                                    <button class="download-btn" data-chart="bar-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="expand-btn" data-chart="bar-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="bar-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container" id="line-chart-container">
+                            <div class="chart-header">
+                                <h3>Line Chart</h3>
+                                <div class="chart-actions">
+                                    <button class="download-btn" data-chart="line-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="expand-btn" data-chart="line-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="line-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container" id="pie-chart-container">
+                            <div class="recommendation-badge">Recommended</div>
+                            <div class="chart-header">
+                                <h3>Pie Chart</h3>
+                                <div class="chart-actions">
+                                    <button class="download-btn" data-chart="pie-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="expand-btn" data-chart="pie-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="pie-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container" id="doughnut-chart-container">
+                            <div class="chart-header">
+                                <h3>Doughnut Chart</h3>
+                                <div class="chart-actions">
+                                    <button class="download-btn" data-chart="doughnut-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="expand-btn" data-chart="doughnut-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="doughnut-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container" id="polar-chart-container">
+                            <div class="chart-header">
+                                <h3>Polar Area Chart</h3>
+                                <div class="chart-actions">
+                                    <button class="download-btn" data-chart="polar-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="expand-btn" data-chart="polar-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="polar-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container" id="radar-chart-container">
+                            <div class="chart-header">
+                                <h3>Radar Chart</h3>
+                                <div class="chart-actions">
+                                    <button class="download-btn" data-chart="radar-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="expand-btn" data-chart="radar-chart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="radar-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Chart Modal -->
+        <div class="modal" id="chart-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Chart Title</h3>
+                    <button id="close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <canvas id="modal-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Modal -->
+        <div class="modal" id="welcome-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Welcome to Data Visualization Dashboard</h3>
+                    <button id="close-welcome-modal">×</button>
+                </div>
+                <div class="welcome-content">
+                    <svg class="welcome-icon" xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                        <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                    </svg>
+                    <h2 class="welcome-title">Transform Your Data into Insights</h2>
+                    <p class="welcome-description">
+                        This dashboard allows you to upload CSV data and instantly create beautiful visualizations. 
+                        No coding required! Simply upload your file or choose a template to generate charts and automatic insights.
+                    </p>
+                    <div class="welcome-features">
+                        <div class="welcome-feature">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span>Upload CSV files</span>
+                        </div>
+                        <div class="welcome-feature">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="9" y1="21" x2="9" y2="9"></line>
+                            </svg>
+                            <span>Multiple chart types</span>
+                        </div>
+                        <div class="welcome-feature">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            <span>Automatic insights</span>
+                        </div>
+                        <div class="welcome-feature">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="4"></circle>
+                                <line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line>
+                                <line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line>
+                                <line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line>
+                                <line x1="14.83" y1="9.17" x2="18.36" y2="5.64"></line>
+                                <line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line>
+                            </svg>
+                            <span>Interactive elements</span>
+                        </div>
+                    </div>
+                    <div class="welcome-buttons">
+                        <button id="start-welcome-tour" class="btn">Take a Quick Tour</button>
+                        <button id="skip-welcome-tour" class="btn btn-outline">Skip Tour</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2023 Data Visualization Dashboard. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Modal backdrop -->
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+
+    <!-- Floating Help Button -->
+    <div class="floating-help" id="floating-help">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/tour.js"></script>
+    <script src="js/insights.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html> 
